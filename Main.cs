@@ -239,7 +239,7 @@ public class CodeGenBuilder
             if(!built) continue;
 
             StringBuilder arguments = new StringBuilder();
-            arguments.Append("--execute " + " " + Home + "/Desktop/test --statistics");
+            arguments.Append("--execute " + " " + AppDomain.CurrentDomain.BaseDirectory + "test --statistics");
             ProcessStartInfo info = new ProcessStartInfo(Home + "/portauthority/src/cpp/authority", arguments.ToString());
             info.WorkingDirectory = Home + "/portauthority/src/cpp";
             Console.Write(test);
