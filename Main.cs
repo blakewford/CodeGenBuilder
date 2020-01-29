@@ -221,13 +221,13 @@ public class CodeGenBuilder
         foreach(string test in mTests)
         {
             File.Delete("test");
-            Process process = Process.Start(Home + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test");
+            Process process = Process.Start("/media/usb/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch.h");
             process.WaitForExit();
 
             bool built = false;
             if(!File.Exists("test"))
             {
-                process = Process.Start(Home + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test");
+                process = Process.Start("/media/usb/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch.h");
                 process.WaitForExit();
                 built = File.Exists("test");
             }
