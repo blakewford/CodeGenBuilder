@@ -117,7 +117,7 @@ public class CodeGenBuilder
 "./multi-dim-operator-new.cpp",
 "./virtual-base-destructor-call.cpp",
 "./debug-info-dllimport-base-class.cpp",
-"./pr29160.cpp",
+//"./pr29160.cpp",
 "./default-constructor-for-members.cpp",
 "./predefined-expr.cpp",
 "./microsoft-abi-cdecl-method-sret.cpp",
@@ -209,7 +209,7 @@ public class CodeGenBuilder
 "./default_calling_conv.cpp",
 "./template-dependent-bind-temporary.cpp",
 "./block.cpp",
-"./vlt_to_reference.cpp",
+//"./vlt_to_reference.cpp",
 "./mangle-mingw.cpp",
 "./microsoft-abi-try-throw.cpp",
 "./debug-info-static-member.cpp",
@@ -219,9 +219,9 @@ public class CodeGenBuilder
     {
         string Home = Environment.GetEnvironmentVariable("HOME");
         string Compiler = Home;        
-        if(false)
+        if(true)
         {
-            Home = "/media/usb";
+            Compiler = "/media/usb";
         }
 
         foreach(string test in mTests)

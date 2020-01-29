@@ -8,7 +8,7 @@ struct timer
 {
     timer()
     {
-        system_clock::time_point catch_point = system_clock::now() + seconds(1);
+        system_clock::time_point catch_point = system_clock::now() + milliseconds(500);
         while(system_clock::now() < catch_point)
             ;
         main();
