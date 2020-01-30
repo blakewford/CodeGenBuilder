@@ -156,10 +156,10 @@ public class CodeGenBuilder
 "./debug-info-fwd-ref.cpp",
 "./2007-01-02-UnboundedArray.cpp",
 //"./debug-info-globalinit.cpp",
-"./vla-consruct.cpp",
+//"./vla-consruct.cpp",
 "./cxx11-trivial-initializer-struct.cpp",
 "./global-array-destruction.cpp",
-"./cast-to-ref-bool.cpp",
+//"./cast-to-ref-bool.cpp",
 "./array-construction.cpp",
 "./copy-assign-synthesis-1.cpp",
 "./ptr-to-datamember.cpp",
@@ -215,11 +215,32 @@ public class CodeGenBuilder
 "./debug-info-static-member.cpp",
     };
 
+    private enum Architecture
+    {
+        x86_64,
+        aarch64
+    }
+
+    private static Architecture GetPlatform()
+    {
+        ProcessStartInfo info = new ProcessStartInfo("lscpu");
+        info.RedirectStandardOutput = true;
+        info.UseShellExecute = false;
+
+        Process process = Process.Start(info);
+        process.WaitForExit();
+
+        string output = process.StandardOutput.ReadToEnd();
+        string[] lines = output.Split((new []{'\r', '\n'}));
+
+        return (Architecture)Enum.Parse(typeof(Architecture), lines[0].Split(':')[1].Trim());
+    }
+
     public static void Main(string[] args)
     {
         string Home = Environment.GetEnvironmentVariable("HOME");
         string Compiler = Home;        
-        if(true)
+        if(GetPlatform() == Architecture.aarch64)
         {
             Compiler = "/media/usb";
         }
@@ -236,6 +257,18 @@ public class CodeGenBuilder
                 process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch.h");
                 process.WaitForExit();
                 built = File.Exists("test");
+                if(!File.Exists("test"))
+                {
+                    process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch-args.h");
+                    process.WaitForExit();
+                    built = File.Exists("test");
+                    if(!File.Exists("test"))
+                    {
+                        process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch-args.h");
+                        process.WaitForExit();
+                        built = File.Exists("test");
+                    }
+                }
             }
             else
             {
