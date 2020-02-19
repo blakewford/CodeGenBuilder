@@ -277,11 +277,16 @@ public class CodeGenBuilder
 
             if(!built) continue;
 
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            Process.Start(AppDomain.CurrentDomain.BaseDirectory + "test").WaitForExit();
+            watch.Stop();
+
             StringBuilder arguments = new StringBuilder();
             arguments.Append("--execute " + " " + AppDomain.CurrentDomain.BaseDirectory + "test --statistics");
             ProcessStartInfo info = new ProcessStartInfo(Home + "/portauthority/src/cpp/authority", arguments.ToString());
             info.WorkingDirectory = Home + "/portauthority/src/cpp";
-            Console.Write(test);
+            Console.Write(test + " " + watch.ElapsedTicks);
             process = Process.Start(info);
             process.WaitForExit();
         }
