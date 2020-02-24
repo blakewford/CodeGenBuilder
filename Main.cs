@@ -245,7 +245,7 @@ public class CodeGenBuilder
             Compiler = "/media/usb";
         }
 
-        Console.WriteLine("Name Ticks Instructions segreg flgctrl inout string break cond shftrot decimal binary conver stack control branch bit logical arith datamov");
+        Console.WriteLine("Name Ticks Instructions Identified segreg flgctrl inout string break cond shftrot decimal binary conver stack control branch bit logical arith datamov");
         foreach(string test in mTests)
         {
             File.Delete("test");
