@@ -236,6 +236,23 @@ public class CodeGenBuilder
         return (Architecture)Enum.Parse(typeof(Architecture), lines[0].Split(':')[1].Trim());
     }
 
+    private static void Analyze(string name, string path)
+    {
+        string Home = Environment.GetEnvironmentVariable("HOME");
+
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+        Process.Start(path).WaitForExit();
+        watch.Stop();
+        StringBuilder arguments = new StringBuilder();
+        arguments.Append("--execute " + path + " --statistics");
+        ProcessStartInfo info = new ProcessStartInfo(Home + "/portauthority/src/cpp/authority", arguments.ToString());
+        info.WorkingDirectory = Home + "/portauthority/src/cpp";
+        Console.Write(name + " " + watch.ElapsedTicks);
+        Process process = Process.Start(info);
+        process.WaitForExit();
+    }
+
     public static void Main(string[] args)
     {
         string Home = Environment.GetEnvironmentVariable("HOME");
@@ -278,18 +295,7 @@ public class CodeGenBuilder
 
             if(!built) continue;
 
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-            Process.Start(AppDomain.CurrentDomain.BaseDirectory + "test").WaitForExit();
-            watch.Stop();
-
-            StringBuilder arguments = new StringBuilder();
-            arguments.Append("--execute " + " " + AppDomain.CurrentDomain.BaseDirectory + "test --statistics");
-            ProcessStartInfo info = new ProcessStartInfo(Home + "/portauthority/src/cpp/authority", arguments.ToString());
-            info.WorkingDirectory = Home + "/portauthority/src/cpp";
-            Console.Write(test + " " + watch.ElapsedTicks);
-            process = Process.Start(info);
-            process.WaitForExit();
+            Analyze(test, AppDomain.CurrentDomain.BaseDirectory + "test");
         }
 
         return;
