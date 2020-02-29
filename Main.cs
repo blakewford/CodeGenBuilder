@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -236,16 +237,34 @@ public class CodeGenBuilder
         return (Architecture)Enum.Parse(typeof(Architecture), lines[0].Split(':')[1].Trim());
     }
 
-    private static void Analyze(string name, string path)
+    private static void Analyze(string name, string path, string breakFunction, string endAtAddress, string[] args)
     {
         string Home = Environment.GetEnvironmentVariable("HOME");
-
+        StringBuilder arguments = new StringBuilder();
+        foreach(string arg in args)
+        {
+            arguments.Append(" " + arg);
+        }
+        
         Stopwatch watch = new Stopwatch();
         watch.Start();
-        Process.Start(path).WaitForExit();
+        Process.Start(path, arguments.ToString()).WaitForExit();
         watch.Stop();
-        StringBuilder arguments = new StringBuilder();
+
+        arguments.Clear();
         arguments.Append("--execute " + path + " --statistics");
+        foreach(string arg in args)
+        {
+            arguments.Append(" --arg " + arg);
+        }
+        if(breakFunction != String.Empty)
+        {
+            arguments.Append(" --break " + breakFunction);            
+        }
+        if(endAtAddress != String.Empty)
+        {
+            arguments.Append(" --end-at-address " + endAtAddress);            
+        }
         ProcessStartInfo info = new ProcessStartInfo(Home + "/portauthority/src/cpp/authority", arguments.ToString());
         info.WorkingDirectory = Home + "/portauthority/src/cpp";
         Console.Write(name + " " + watch.ElapsedTicks);
@@ -263,39 +282,72 @@ public class CodeGenBuilder
         }
 
         Console.WriteLine("Name Ticks Instructions Identified segreg flgctrl inout string break cond shftrot decimal binary conver stack control branch bit logical arith datamov");
-        foreach(string test in mTests)
+ 
+        Int32 count = 0;
+        string executable = String.Empty;
+        string breakFunction = String.Empty;
+        string endAddress = String.Empty;
+        List<string> executableArgs = new List<string>();
+        while(count < args.Length)
         {
-            File.Delete("test");
-            Process process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch.h");
-            process.WaitForExit();
-
-            bool built = false;
-            if(!File.Exists("test"))
+            switch(args[count])
             {
-                process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch.h");
+                case "--execute":
+                    executable = args[++count];
+                    break;
+                case "--break":
+                    breakFunction = args[++count];
+                    break;
+                case "--end-at-address":
+                    endAddress = args[++count];
+                    break;
+                default:
+                    executableArgs.Add(args[count]);
+                    break;
+            }
+            count++;
+        }
+ 
+        if(executable == String.Empty)
+        {
+            foreach(string test in mTests)
+            {
+                File.Delete("test");
+                Process process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch.h");
                 process.WaitForExit();
-                built = File.Exists("test");
+    
+                bool built = false;
                 if(!File.Exists("test"))
                 {
-                    process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch-args.h");
+                    process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch.h");
                     process.WaitForExit();
                     built = File.Exists("test");
                     if(!File.Exists("test"))
                     {
-                        process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch-args.h");
+                        process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch-args.h");
                         process.WaitForExit();
                         built = File.Exists("test");
+                        if(!File.Exists("test"))
+                        {
+                            process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch-args.h");
+                            process.WaitForExit();
+                            built = File.Exists("test");
+                        }
                     }
                 }
+                else
+                {
+                    built = true;
+                }
+    
+                if(!built) continue;
+    
+                Analyze(test, AppDomain.CurrentDomain.BaseDirectory + "test", breakFunction, endAddress, new string[0]);
             }
-            else
-            {
-                built = true;
-            }
-
-            if(!built) continue;
-
-            Analyze(test, AppDomain.CurrentDomain.BaseDirectory + "test");
+        }
+        else
+        {
+            Analyze(Path.GetFileName(executable), executable, breakFunction, endAddress, executableArgs.ToArray());            
         }
 
         return;
