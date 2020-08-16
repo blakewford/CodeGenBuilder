@@ -9,7 +9,7 @@ public class CodeGenBuilder
     private static readonly string CLANG_C_PATH = "/llvm-project/clang/test/CodeGen/";
     private static readonly string CLANG_CXX_PATH = "/llvm-project/clang/test/CodeGenCXX/";
 
-    private static string[] mTests = {
+    private static string[] mBuiltinClangTests = {
 "./2007-05-08-PCH.c",
 "./2007-08-01-LoadStoreAlign.c",
 "./x86_64-profiling-keep-fp.c",
@@ -275,7 +275,7 @@ public class CodeGenBuilder
     public static void Main(string[] args)
     {
         string Home = Environment.GetEnvironmentVariable("HOME");
-        string Compiler = Home;        
+        string Compiler = Home;
         if(GetPlatform() == Architecture.aarch64)
         {
             Compiler = "/media/usb";
@@ -287,6 +287,7 @@ public class CodeGenBuilder
         string executable = String.Empty;
         string breakFunction = String.Empty;
         string endAddress = String.Empty;
+        string yarpgen = String.Empty;
         List<string> executableArgs = new List<string>();
         while(count < args.Length)
         {
@@ -304,32 +305,61 @@ public class CodeGenBuilder
                 default:
                     executableArgs.Add(args[count]);
                     break;
+                case "--yarpgen":
+                    yarpgen = args[++count];
+                    break;
             }
             count++;
         }
  
         if(executable == String.Empty)
         {
-            foreach(string test in mTests)
+            string PATH1 = String.Empty;
+            string PATH2 = String.Empty;
+            string[] tests = new String[0];
+            if(yarpgen == String.Empty)
+            {
+                PATH1 = CLANG_C_PATH;
+                PATH2 = CLANG_CXX_PATH;
+                tests = mBuiltinClangTests;
+            }
+            else
+            {
+                Home = String.Empty;
+                List<string> list = new List<string>();
+                list.AddRange(Directory.GetDirectories(yarpgen));
+                tests = list.ToArray();
+                foreach(string test in tests)
+                {
+                    list.Remove(test);
+                    if(!test.Contains("result"))
+                    {
+                        list.Add(test + "/driver.cpp " + test + "/func.cpp");
+                    }
+                }
+                tests = list.ToArray();
+            }
+
+            foreach(string test in tests)
             {
                 File.Delete("test");
-                Process process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch.h");
+                Process process = Process.Start(Compiler + "/build/bin/clang++", Home + PATH1 + test + " -o test -include catch.h");
                 process.WaitForExit();
     
                 bool built = false;
                 if(!File.Exists("test"))
                 {
-                    process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch.h");
+                    process = Process.Start(Compiler + "/build/bin/clang++", Home + PATH2 + test + " -o test -include catch.h");
                     process.WaitForExit();
                     built = File.Exists("test");
                     if(!File.Exists("test"))
                     {
-                        process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_C_PATH + test + " -o test -include catch-args.h");
+                        process = Process.Start(Compiler + "/build/bin/clang++", Home + PATH1 + test + " -o test -include catch-args.h");
                         process.WaitForExit();
                         built = File.Exists("test");
                         if(!File.Exists("test"))
                         {
-                            process = Process.Start(Compiler + "/build/bin/clang++", Home + CLANG_CXX_PATH + test + " -o test -include catch-args.h");
+                            process = Process.Start(Compiler + "/build/bin/clang++", Home + PATH2 + test + " -o test -include catch-args.h");
                             process.WaitForExit();
                             built = File.Exists("test");
                         }
