@@ -334,7 +334,7 @@ public class CodeGenBuilder
                     list.Remove(test);
                     if(!test.Contains("result"))
                     {
-                        list.Add(test + "/driver.cpp " + test + "/func.cpp");
+                        list.Add(test + "/driver.cpp -include " + test + "/func.cpp");
                     }
                 }
                 tests = list.ToArray();
@@ -371,13 +371,25 @@ public class CodeGenBuilder
                 }
     
                 if(!built) continue;
-    
-                Analyze(test, AppDomain.CurrentDomain.BaseDirectory + "test", breakFunction, endAddress, new string[0]);
+
+                string name = test;
+                if(yarpgen != String.Empty)
+                {
+                    string[] parts = name.Split("/");
+                    foreach(string part in parts)
+                    {
+                        if(part.Contains("process"))
+                        {
+                            name = part;
+                        }
+                    }
+                }
+                Analyze(name, AppDomain.CurrentDomain.BaseDirectory + "test", breakFunction, endAddress, new string[0]);
             }
         }
         else
         {
-            Analyze(Path.GetFileName(executable), executable, breakFunction, endAddress, executableArgs.ToArray());            
+            Analyze(Path.GetFileName(executable), executable, breakFunction, endAddress, executableArgs.ToArray());
         }
 
         return;
